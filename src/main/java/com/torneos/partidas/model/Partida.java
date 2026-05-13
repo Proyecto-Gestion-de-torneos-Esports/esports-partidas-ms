@@ -17,7 +17,7 @@ public class Partida {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "partida_seq")
     @SequenceGenerator(name = "partida_seq", sequenceName = "PARTIDA_SEQ", allocationSize = 1)
-    private Long id;
+    private Long partidaId;
 
     @Column(name = "equipo_local_id", nullable = false)
     private Long equipoLocalId;

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class PartidaResponseDTO {
 
-    private Long id;
+    private Long partidaId;
     private Long equipoLocalId;
     private Long equipoVisitanteId;
     private Integer marcadorLocal;

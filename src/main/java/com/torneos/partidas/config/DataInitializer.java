@@ -28,9 +28,9 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Base de datos vacía. Cargando partidas de prueba para el torneo");
 
         partidaRepository.saveAll(List.of(
-                new Partida(null, 1L, 2L, 0, 0, LocalDateTime.now().plusDays(2), EstadoPartida.PENDIENTE),
-                new Partida(null, 3L, 4L, 5, 5, LocalDateTime.now(), EstadoPartida.EN_CURSO),
-                new Partida(null, 5L, 6L, 13, 11, LocalDateTime.now().minusDays(1), EstadoPartida.FINALIZADA)
+                new Partida(null, 1L, 2L, 0, 0, LocalDateTime.now().plusDays(2), EstadoPartida.PENDIENTE,1L),
+                new Partida(null, 3L, 4L, 5, 5, LocalDateTime.now(), EstadoPartida.EN_CURSO,2L),
+                new Partida(null, 5L, 6L, 13, 11, LocalDateTime.now().minusDays(1), EstadoPartida.FINALIZADA,3L)
         ));
 
         log.info("Carga de resplado completada. {} partidas insertadas", partidaRepository.count());

@@ -37,4 +37,8 @@ public class PartidaRequestDTO {
     @NotNull(message = "El estado de la partida es obligatorio")
     private EstadoPartida estado;
 
+    @NotNull(message = "El ID del Torneo es obligatorio")
+    @Positive(message = "El ID del Torneo debe ser mayor a cero")
+    private Long torneoId;
+
 }

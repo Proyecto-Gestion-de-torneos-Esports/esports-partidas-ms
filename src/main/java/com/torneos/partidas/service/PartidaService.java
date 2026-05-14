@@ -41,6 +41,7 @@ public class PartidaService {
         partida.setMarcadorVisitante(dto.getMarcadorVisitante());
         partida.setFechaPartida(dto.getFechaPartida());
         partida.setEstado(dto.getEstado());
+        partida.setTorneoId(dto.getTorneoId());
 
         PartidaResponseDTO respuesta = mapToDto(partidaRepository.save(partida));
         log.info("Partida entre ID Local {} y ID Visitante {} creada y guardada correctamente", dto.getEquipoLocalId(), dto.getEquipoVisitanteId());
@@ -118,6 +119,22 @@ public class PartidaService {
         return mapToDto(partidaRepository.save(partida));
     }
 
+    @Transactional(readOnly = true)
+    public List<PartidaResponseDTO> buscarPorTorneoId(Long torneoId) {
+        log.info("Buscando todas las partidas asociadas al torneo ID: {}", torneoId);
+        List<Partida> partidas = partidaRepository.findByTorneoId(torneoId);
+
+        if (partidas.isEmpty()) {
+            log.warn("No se encontraron partidas para el torneo ID: {}", torneoId);
+        } else {
+            log.info("Se encontraron {} partidas para el torneo ID: {}", partidas.size(), torneoId);
+        }
+
+        return partidas.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
 
 
     private void validarEquipo(Long equipoId, String tipo) {
@@ -138,7 +155,8 @@ public class PartidaService {
                 partida.getMarcadorLocal(),
                 partida.getMarcadorVisitante(),
                 partida.getFechaPartida(),
-                partida.getEstado()
+                partida.getEstado(),
+                partida.getTorneoId()
         );
     }
 

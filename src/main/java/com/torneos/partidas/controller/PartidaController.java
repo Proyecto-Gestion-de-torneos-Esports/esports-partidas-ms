@@ -52,6 +52,11 @@ public class PartidaController {
         return ResponseEntity.ok(partidaService.buscarPorEquipo(equipoId));
     }
 
+    @GetMapping("/torneo/{torneoId}")
+    public ResponseEntity<List<PartidaResponseDTO>> buscarPorTorneo(@PathVariable Long torneoId) {
+        return ResponseEntity.ok(partidaService.buscarPorTorneoId(torneoId));
+    }
+
     @PatchMapping("/{partidaId}/estado")
     public ResponseEntity<PartidaResponseDTO> cambiarEstado(
             @PathVariable Long partidaId,

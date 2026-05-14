@@ -19,4 +19,5 @@ public class PartidaResponseDTO {
     private Integer marcadorVisitante;
     private LocalDateTime fechaPartida;
     private EstadoPartida estado;
+    private Long torneoId;
 }

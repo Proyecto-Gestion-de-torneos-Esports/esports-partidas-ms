@@ -61,7 +61,7 @@ public class PartidaController {
     public ResponseEntity<PartidaResponseDTO> cambiarEstado(
             @PathVariable Long partidaId,
             @RequestParam EstadoPartida nuevoEstado,
-            @RequestHeader("UsuarioId") Long usuarioId) {
+            @RequestHeader("usuarioId") Long usuarioId) {
 
         PartidaResponseDTO actualizada = partidaService.actualizarEstado(partidaId, nuevoEstado, usuarioId);
         return ResponseEntity.ok(actualizada);

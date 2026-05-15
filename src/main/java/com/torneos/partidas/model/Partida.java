@@ -15,8 +15,7 @@ import java.time.LocalDateTime;
 public class Partida {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "partida_seq")
-    @SequenceGenerator(name = "partida_seq", sequenceName = "PARTIDA_SEQ", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long partidaId;
 
     @Column(name = "equipo_local_id", nullable = false)

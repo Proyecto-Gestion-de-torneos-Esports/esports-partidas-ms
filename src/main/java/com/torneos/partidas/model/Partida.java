@@ -37,6 +37,9 @@ public class Partida {
     @Column(name = "estado", nullable = false)
     private EstadoPartida estado;
 
+    @Column(nullable = false)
+    private Long idNotificacion;
+
     @Column(name = "torneo_id")
     private Long torneoId;
 

@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/partidas")
+@RequestMapping("/api/partidas")
 @RequiredArgsConstructor
 public class PartidaController {
     private final PartidaService partidaService;
@@ -39,11 +39,9 @@ public class PartidaController {
     @PutMapping("/{partidaId}")
     public ResponseEntity<PartidaResponseDTO> actualizar(@PathVariable Long partidaId, @RequestBody PartidaRequestDTO dto,
                                                          @RequestHeader("usuarioId") Long usuarioId) {
-
         Optional<PartidaResponseDTO> actualizada = partidaService.actualizar(partidaId, dto, usuarioId);
         return actualizada.map(ResponseEntity::ok).orElseGet(()->ResponseEntity.notFound().build());
     }
-
     @GetMapping("/estado/{estado}")
     public ResponseEntity<List<PartidaResponseDTO>> buscarPorEstado(@PathVariable EstadoPartida estado) {
         return ResponseEntity.ok(partidaService.buscarPorEstado(estado));

@@ -1,5 +1,6 @@
 package com.torneos.partidas.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.torneos.partidas.model.EstadoPartida;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,4 +21,5 @@ public class PartidaResponseDTO {
     private LocalDateTime fechaPartida;
     private EstadoPartida estado;
     private Long torneoId;
+
 }

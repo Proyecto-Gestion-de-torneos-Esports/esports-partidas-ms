@@ -30,8 +30,25 @@ public class PartidaService {
     private final UsuarioClient usuarioClient;
     private final AuditoriaClient auditoriaClient;
 
+    private PartidaResponseDTO mapToDto(Partida partida) {
+        return new PartidaResponseDTO(
+                partida.getPartidaId(),
+                partida.getEquipoLocalId(),
+                partida.getEquipoVisitanteId(),
+                partida.getMarcadorLocal(),
+                partida.getMarcadorVisitante(),
+                partida.getFechaPartida(),
+                partida.getEstado(),
+                partida.getTorneoId()
+        );
+    }
+
     @Transactional
-    public PartidaResponseDTO guardar(PartidaRequestDTO dto){
+    public PartidaResponseDTO guardar(PartidaRequestDTO dto, Long usuarioId){
+        String rol = obtenerRolUsuario(usuarioId);
+        if (!rol.equalsIgnoreCase("ADMIN")&& !rol.equalsIgnoreCase("ARBITRO")){
+            throw new RuntimeException("Acceso denegado: Solo Árbitros o Administradores pueden crear una partida");
+        }
         if (dto.getEquipoLocalId().equals(dto.getEquipoVisitanteId())) {
             throw new IllegalArgumentException("Un equipo no puede jugar contra sí mismo.");
         }
@@ -51,7 +68,7 @@ public class PartidaService {
         PartidaResponseDTO respuesta = mapToDto(partidaRepository.save(partida));
         log.info("Partida entre ID Local {} y ID Visitante {} creada y guardada correctamente", dto.getEquipoLocalId(), dto.getEquipoVisitanteId());
 
-        String detalleAuditoria = "se creo una nueva partida con ID: " + dto.getTorneoId();
+        String detalleAuditoria = "se creo una nueva partida con ID: " + respuesta.getPartidaId();
         generarAuditoria(detalleAuditoria);
 
         return respuesta;
@@ -77,27 +94,23 @@ public class PartidaService {
     }
 
     @Transactional
-    public Optional<PartidaResponseDTO> actualizar(Long partidaId,PartidaRequestDTO dto){
+    public Optional<PartidaResponseDTO> actualizar(Long partidaId,PartidaRequestDTO dto, Long usuarioId){
+
+        String rol = obtenerRolUsuario(usuarioId);
+        if (!rol.equalsIgnoreCase("ADMIN") && !rol.equalsIgnoreCase("ARBITRO")) {
+            throw new RuntimeException("Acceso denegado: Solo Árbitros o Administradores pueden actualizar la partida.");
+        }
         return partidaRepository.findById(partidaId).map(existente -> {
             log.info("Partida con ID: {} encontrada. Actualizando marcadores y/o estado", partidaId);
 
-            if (!existente.getEquipoLocalId().equals(dto.getEquipoLocalId())) {
-                validarEquipoExiste(dto.getEquipoLocalId(), "Local");
-            }
-            if (!existente.getEquipoVisitanteId().equals(dto.getEquipoVisitanteId())) {
-                validarEquipoExiste(dto.getEquipoVisitanteId(), "Visitante");
-            }
-
-            existente.setEquipoLocalId(dto.getEquipoLocalId());
-            existente.setEquipoVisitanteId(dto.getEquipoVisitanteId());
             existente.setMarcadorLocal(dto.getMarcadorLocal());
             existente.setMarcadorVisitante(dto.getMarcadorVisitante());
-            existente.setFechaPartida(dto.getFechaPartida());
             existente.setEstado(dto.getEstado());
 
             PartidaResponseDTO respuesta = mapToDto(partidaRepository.save(existente));
             log.info("La Partida (ID: {}) fue actualizada correctamente", partidaId);
-            String detalleAuditoria = "Se actualizo la partida con ID: " + partidaId;
+
+            String detalleAuditoria = "Se actualizó la partida con ID: " + partidaId + " modificado por Usuario ID: " + usuarioId;
             generarAuditoria(detalleAuditoria);
 
             return respuesta;
@@ -113,8 +126,13 @@ public class PartidaService {
 
     @Transactional(readOnly = true)
     public List<PartidaResponseDTO> buscarPorEquipo(Long equipoId) {
+        log.info("Validando existencia del equipo ID: {}", equipoId);
+        equipoClient.validarEquipoExiste(equipoId);
         log.info("Buscando historial de partidas para el equipo ID: {}", equipoId);
         List<Partida> partidas = partidaRepository.findByEquipoLocalIdOrEquipoVisitanteId(equipoId, equipoId);
+        if (partidas.isEmpty()){
+            log.warn("El equipo existe, pero aún no tiene partidas registradas. ID: {}", equipoId);
+        }
         return partidas.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 
@@ -123,21 +141,9 @@ public class PartidaService {
         return usuario.get("rol").toString();
     }
 
-    @Transactional
-    public PartidaResponseDTO actualizarEstado(Long partidaId, EstadoPartida nuevoEstado, Long usuarioId) {
-        String rol = obtenerRolUsuario(usuarioId);
-        if (!rol.equalsIgnoreCase("ADMIN") && !rol.equalsIgnoreCase("ARBITRO")) {
-            throw new RuntimeException("Acceso denegado: Solo Árbitros o Administradores pueden cambiar el estado.");
-        }
-        Partida partida = partidaRepository.findById(partidaId)
-                .orElseThrow(() -> new RuntimeException("Partida no encontrada."));
-
-        partida.setEstado(nuevoEstado);
-        return mapToDto(partidaRepository.save(partida));
-    }
-
     @Transactional(readOnly = true)
     public List<PartidaResponseDTO> buscarPorTorneoId(Long torneoId) {
+        log.info("Validando existencia del torneo ID: {}", torneoId);
         log.info("Buscando todas las partidas asociadas al torneo ID: {}", torneoId);
         List<Partida> partidas = partidaRepository.findByTorneoId(torneoId);
 
@@ -146,34 +152,16 @@ public class PartidaService {
         } else {
             log.info("Se encontraron {} partidas para el torneo ID: {}", partidas.size(), torneoId);
         }
-
         return partidas.stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
-
-
 
     private void validarEquipoExiste(Long equipoId, String tipo) {
         if (equipoId != null) {
             equipoClient.validarEquipoExiste(equipoId);
             log.info("Equipo {} (ID: {}) validado con éxito a través del Client", tipo, equipoId);
         }
-    }
-
-
-
-    private PartidaResponseDTO mapToDto(Partida partida) {
-        return new PartidaResponseDTO(
-                partida.getPartidaId(),
-                partida.getEquipoLocalId(),
-                partida.getEquipoVisitanteId(),
-                partida.getMarcadorLocal(),
-                partida.getMarcadorVisitante(),
-                partida.getFechaPartida(),
-                partida.getEstado(),
-                partida.getTorneoId()
-        );
     }
 
     public void generarAuditoria(String detalle){

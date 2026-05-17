@@ -29,4 +29,43 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.badRequest().body(error);
     }
+
+    @ExceptionHandler(feign.FeignException.NotFound.class)
+    public ResponseEntity<Map<String, String>> handleFeignNotFoundException(feign.FeignException.NotFound ex) {
+        Map<String, String> error = new LinkedHashMap<>();
+        String urlComprobar = ex.request().url();
+
+        if (urlComprobar.contains("/api/usuarios")) {
+            error.put("error", "Usuario no encontrado");
+            error.put("mensaje", "El usuario ingresado no existe o fue eliminado.");
+        } else if (urlComprobar.contains("/api/equipos")) {
+            error.put("error", "Equipo no válido");
+            error.put("mensaje", "El equipo ingresado no existe o está dado de baja.");
+        } else {
+            error.put("error", "Recurso no encontrado");
+            error.put("mensaje", "El recurso solicitado en el microservicio externo no existe.");
+        }
+
+        return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND).body(error);
+    }
+    @ExceptionHandler(feign.FeignException.class)
+    public ResponseEntity<Map<String, String>> handleGeneralFeignException(feign.FeignException ex) {
+        Map<String, String> error = new LinkedHashMap<>();
+        String urlComprobar = ex.request().url();
+
+        if (urlComprobar.contains("/api/usuarios")) {
+            error.put("error", "Error de validación de Usuario");
+            error.put("mensaje", "No se pudo validar al usuario o no tiene los permisos necesarios.");
+        } else if (urlComprobar.contains("/api/equipos")) {
+            error.put("error", "Error de validación de Equipo");
+            error.put("mensaje", "El equipo ingresado presenta problemas o está inactivo.");
+        } else {
+            error.put("error", "Error de comunicación externa");
+            error.put("mensaje", "Ocurrió un error al comunicarse con otro microservicio.");
+        }
+
+        return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).body(error);
+    }
+
+
 }

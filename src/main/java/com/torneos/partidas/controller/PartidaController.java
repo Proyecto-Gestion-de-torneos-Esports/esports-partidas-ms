@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("api/partidas")
@@ -31,19 +32,20 @@ public class PartidaController {
     }
 
     @PostMapping
-    public ResponseEntity<PartidaResponseDTO> crear(@Valid @RequestBody PartidaRequestDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(partidaService.guardar(dto));
+    public ResponseEntity<PartidaResponseDTO> crear(@Valid @RequestBody PartidaRequestDTO dto, @RequestHeader("usuarioId") Long usuarioId) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(partidaService.guardar(dto, usuarioId));
     }
 
     @PutMapping("/{partidaId}")
-    public ResponseEntity<PartidaResponseDTO> actualizar(@PathVariable Long partidaId, @Valid @RequestBody PartidaRequestDTO dto) {
-        return partidaService.actualizar(partidaId, dto)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<PartidaResponseDTO> actualizar(@PathVariable Long partidaId, @RequestBody PartidaRequestDTO dto,
+                                                         @RequestHeader("usuarioId") Long usuarioId) {
+
+        Optional<PartidaResponseDTO> actualizada = partidaService.actualizar(partidaId, dto, usuarioId);
+        return actualizada.map(ResponseEntity::ok).orElseGet(()->ResponseEntity.notFound().build());
     }
 
     @GetMapping("/estado/{estado}")
-    public ResponseEntity<List<PartidaResponseDTO>> buscarPorEstado(@PathVariable com.torneos.partidas.model.EstadoPartida estado) {
+    public ResponseEntity<List<PartidaResponseDTO>> buscarPorEstado(@PathVariable EstadoPartida estado) {
         return ResponseEntity.ok(partidaService.buscarPorEstado(estado));
     }
 
@@ -55,16 +57,6 @@ public class PartidaController {
     @GetMapping("/torneo/{torneoId}")
     public ResponseEntity<List<PartidaResponseDTO>> buscarPorTorneo(@PathVariable Long torneoId) {
         return ResponseEntity.ok(partidaService.buscarPorTorneoId(torneoId));
-    }
-
-    @PatchMapping("/{partidaId}/estado")
-    public ResponseEntity<PartidaResponseDTO> cambiarEstado(
-            @PathVariable Long partidaId,
-            @RequestParam EstadoPartida nuevoEstado,
-            @RequestHeader("usuarioId") Long usuarioId) {
-
-        PartidaResponseDTO actualizada = partidaService.actualizarEstado(partidaId, nuevoEstado, usuarioId);
-        return ResponseEntity.ok(actualizada);
     }
 
 
